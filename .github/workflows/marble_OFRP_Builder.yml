@@ -20,7 +20,7 @@ on:
       DEVICE_TREE:
         description: 'OrangeFox 设备树'
         required: true
-        default: 'https://github.com/Ctapchuk/android_device_xiaomi_marble-OFRP'
+        default: 'https://github.com/AviderMin/android_device_xiaomi_marble-OFRP'
       DEVICE_TREE_BRANCH:
         description: 'OrangeFox 设备树分支'
         required: true
