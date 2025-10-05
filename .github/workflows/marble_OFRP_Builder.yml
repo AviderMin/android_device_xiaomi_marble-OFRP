@@ -94,6 +94,13 @@ jobs:
         git clone https://gitlab.com/OrangeFox/sync.git -b master
         cd sync
         ./orangefox_sync.sh --branch ${{ inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+    - name: Patching the Source Code
+      if: inputs.MANIFEST_BRANCH == '12.1'
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/ymdzq/scripts of_patch
+        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
+        git fetch https://github.com/AviderMin/OrangeFox_Recovery_Source fox_12.1 && git cherry-pick 08895401..e65fa704
     - name: 📥 克隆设备树
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
