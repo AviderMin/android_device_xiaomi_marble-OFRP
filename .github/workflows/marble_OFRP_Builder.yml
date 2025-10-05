@@ -98,7 +98,7 @@ jobs:
       if: inputs.MANIFEST_BRANCH == '12.1'
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
-        git fetch https://github.com/AviderMin/OrangeFox_Recovery_Source fox_12.1 && git cherry-pick 08895401..e65fa704
+        git fetch https://github.com/AviderMin/OrangeFox_Recovery_Source fox_12.1
     - name: 📥 克隆设备树
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
