@@ -48,4 +48,9 @@ OF_DISABLE_OTA_MENU := 1
 
 # OTA
 OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
-#
+
+# OrangeFox Localization Settings
+OF_DEFAULT_TIMEZONE := CST-8
+
+# Dynamic Partition Assist Options
+OF_USE_DMCTL := 1
