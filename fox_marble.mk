@@ -50,7 +50,8 @@ OF_DISABLE_OTA_MENU := 1
 OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
 
 # OrangeFox Localization Settings
+OF_MAINTAINER=AviderMin
 OF_DEFAULT_TIMEZONE := CST-8
 
 # Dynamic Partition Assist Options
-OF_USE_DMCTL := 1
+FOX_USE_DMSETUP := 1
