@@ -55,3 +55,4 @@ OF_DEFAULT_TIMEZONE := CST-8
 
 # Dynamic Partition Assist Options
 FOX_USE_DMSETUP := 1
+OF_USE_DMCTL := 1
