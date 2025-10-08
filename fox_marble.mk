@@ -46,6 +46,11 @@ OF_ENABLE_ALL_PARTITION_TOOLS := 1
 
 OF_DISABLE_OTA_MENU := 1
 
+# ----- data format stuff -----
+# ensure that /sdcard is bind-unmounted before f2fs data repair or format
+OF_UNBIND_SDCARD_F2FS := 1
+
+
 # OTA
 OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
 
@@ -55,3 +60,5 @@ OF_DEFAULT_TIMEZONE := CST-8
 
 # Dynamic Partition Assist Options
 FOX_USE_DMSETUP := 1
+
+OF_FORCE_DATA_FORMAT_F2FS := 1
