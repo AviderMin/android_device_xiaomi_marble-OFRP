@@ -105,6 +105,15 @@ jobs:
         git clone https://github.com/ymdzq/twrp_prebuilt ~/twrp_prebuilt
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/${{ inputs.DEVICE_PATH }}
         if ! grep -q 'FOX_USE_SPECIFIC_MAGISK_ZIP' vendorsetup.sh; then (echo 'export FOX_USE_SPECIFIC_MAGISK_ZIP=~/twrp_prebuilt/Magisk/${{ inputs.MAGISK_VERSION }}.apk'>>vendorsetup.sh && echo "Added FOX_USE_SPECIFIC_MAGISK_ZIP in vendorsetup.sh"); else sed -i 's/.*export FOX_USE_SPECIFIC_MAGISK_ZIP.*/export FOX_USE_SPECIFIC_MAGISK_ZIP=\~\/twrp_prebuilt\/Magisk\/${{ inputs.MAGISK_VERSION }}.apk/' vendorsetup.sh; fi
+    - name: 💾 设置ccache缓存
+      uses: actions/cache@v4
+      with:
+        path: ~/.ccache
+        key: ${{ runner.os }}-ccache-${{ inputs.DEVICE_NAME }}-${{ inputs.MANIFEST_BRANCH }}-${{ inputs.DEVICE_TREE_BRANCH }}
+        restore-keys: |
+          ${{ runner.os }}-ccache-${{ inputs.DEVICE_NAME }}-${{ inputs.MANIFEST_BRANCH }}-
+          ${{ runner.os }}-ccache-${{ inputs.DEVICE_NAME }}-
+          ${{ runner.os }}-ccache-
     - name: 🔨 构建 OrangeFox
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
@@ -115,6 +124,9 @@ jobs:
         export FOX_USE_NANO_EDITOR=1
         set -e
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
+    - name: 📊 显示ccache统计信息
+      run: |
+        ccache -sv
     - name: 🏷️ 设置发布属性
       run: |
         echo "BUILD_DATE=$(TZ=Asia/Manila date +%Y%m%d)" >> $GITHUB_ENV
