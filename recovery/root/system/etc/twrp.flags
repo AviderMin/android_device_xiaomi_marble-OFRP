@@ -1,14 +1,17 @@
 # mount point   fstype  device                                          device2             flags
 # Logical partitions
-/system_image   emmc    /dev/block/mapper/system					    flags=slotselect
-/mi_ext		auto    mi_ext								    flags=display="Mi-EXT";logical
+/system_image   emmc    /dev/block/mapper/system					                        flags=slotselect
+/mi_ext		    auto    mi_ext								                                flags=display="Mi-EXT";logical
 
 # Other partitions
 /boot           emmc    /dev/block/bootdevice/by-name/boot                                  flags=slotselect
-/cache         	ext4    /dev/block/bootdevice/by-name/rescue			  	    flags=backup=0
+/cache         	ext4    /dev/block/bootdevice/by-name/rescue			  	                flags=backup=0
+/metadata           ext4     /dev/block/bootdevice/by-name/metadata                         flags=display="Metadata";wrappedkey;backup=1
+/data               f2fs     /dev/block/bootdevice/by-name/userdata                         flags=display="Data";fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized+wrappedkey_v0,metadata_encryption=aes-256-xts:wrappedkey_v0,keydirectory=/metadata/vold/metadata_encryption
 /recovery       emmc    /dev/block/bootdevice/by-name/recovery                              flags=slotselect;backup
 /vendor_boot    emmc    /dev/block/bootdevice/by-name/vendor_boot                           flags=slotselect;display="Vendor Boot";backup;flashimg
 /frp            emmc    /dev/block/bootdevice/by-name/frp                                   flags=display="FRP";wipeingui
+/storage       	auto    /data/media/0                  		     		 	                flags=backup=1;display="Internal Storage";usermrf;fsflags="utf8";removable
 
 # AVB partitions
 /dtbo           emmc    /dev/block/bootdevice/by-name/dtbo                                  flags=slotselect;display="DTBO";backup;flashimg
@@ -32,5 +35,5 @@
 /efsg           emmc    /dev/block/bootdevice/by-name/fsg                                   flags=backup;subpartitionof=/efs1
 
 # Removable storage
-/storage	auto    /data/media/0							    flags=backup;removable;fsflags="bind,utf8"
-/usb_otg        auto	/dev/block/sdg1		/dev/block/sdh1        			    flags=storage;wipeingui;removable;fsflags="utf8"
+/storage       	auto    /data/media/0                  		     		 	                flags=backup=1;display="Internal Storage";usermrf;fsflags="utf8";removable
+/usb_otg        auto	/dev/block/sdg1		/dev/block/sdh1        			                flags=storage;wipeingui;removable;fsflags="utf8"
