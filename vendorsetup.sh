@@ -50,6 +50,9 @@ if [ "$1" = "$FDEVICE" -o "$FOX_BUILD_DEVICE" = "$FDEVICE" ]; then
 	export FOX_ALLOW_EARLY_SETTINGS_LOAD=1
 	export FOX_MISCELLANEOUS_ROOT_DIRECTORY="/sdcard"
 
+	#KernelSU
+	export FOX_ENABLE_KERNELSU_SUPPORT=1
+
 	#OFR binary files
 	export FOX_REPLACE_BUSYBOX_PS=1
 	export FOX_USE_BASH_SHELL=1
