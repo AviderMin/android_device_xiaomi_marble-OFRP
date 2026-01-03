@@ -99,7 +99,7 @@ jobs:
         git clone https://github.com/AviderMin/OrangeFox_Addons.git ${GITHUB_WORKSPACE}/addons
         
         # 直接复制所有文件到 vendor/Files
-        cp ${GITHUB_WORKSPACE}/addons/* ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/vendor/Files/ || true
+        cp ${GITHUB_WORKSPACE}/addons/* ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/vendor/recovery/Files/ || true
         
         echo "Addons 文件已复制到 vendor/Files"
     
