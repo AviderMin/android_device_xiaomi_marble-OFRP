@@ -42,15 +42,6 @@ on:
         - boot
         - recovery
         - vendorboot
-      MAGISK_VERSION:
-        description: '选择你的Magisk版本'
-        required: true
-        default: 'MagiskAlpha'
-        type: choice
-        options:
-        - Magisk
-        - MagiskAlpha
-        - MagiskDelta
       OF_MAINTAINER:
         description: '输入维护者名称'
         required: true
@@ -94,17 +85,24 @@ jobs:
         git clone https://gitlab.com/OrangeFox/sync.git -b master
         cd sync
         ./orangefox_sync.sh --branch ${{ inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+    
     - name: 📥 克隆设备树
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
         git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ./${{ inputs.DEVICE_PATH }}
         cd ${{ inputs.DEVICE_PATH }}
         echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
-    - name: ⚡ 更新 OrangeFox 的内置 Magisk
+    
+    - name: 🛠️ 替换 addons 文件
       run: |
-        git clone https://github.com/ymdzq/twrp_prebuilt ~/twrp_prebuilt
-        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/${{ inputs.DEVICE_PATH }}
-        if ! grep -q 'FOX_USE_SPECIFIC_MAGISK_ZIP' vendorsetup.sh; then (echo 'export FOX_USE_SPECIFIC_MAGISK_ZIP=~/twrp_prebuilt/Magisk/${{ inputs.MAGISK_VERSION }}.apk'>>vendorsetup.sh && echo "Added FOX_USE_SPECIFIC_MAGISK_ZIP in vendorsetup.sh"); else sed -i 's/.*export FOX_USE_SPECIFIC_MAGISK_ZIP.*/export FOX_USE_SPECIFIC_MAGISK_ZIP=\~\/twrp_prebuilt\/Magisk\/${{ inputs.MAGISK_VERSION }}.apk/' vendorsetup.sh; fi
+        # 克隆 OrangeFox Addons 仓库
+        git clone https://github.com/AviderMin/OrangeFox_Addons.git ${GITHUB_WORKSPACE}/addons
+        
+        # 直接复制所有文件到 vendor/Files
+        cp ${GITHUB_WORKSPACE}/addons/* ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/vendor/Files/ || true
+        
+        echo "Addons 文件已复制到 vendor/Files"
+    
     - name: 💾 设置ccache缓存
       uses: actions/cache@v4
       with:
@@ -114,23 +112,30 @@ jobs:
           ${{ runner.os }}-ccache-${{ inputs.DEVICE_NAME }}-${{ inputs.MANIFEST_BRANCH }}-
           ${{ runner.os }}-ccache-${{ inputs.DEVICE_NAME }}-
           ${{ runner.os }}-ccache-
+    
     - name: 🔨 构建 OrangeFox
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
         set +e
-        source build/envsetup.sh
+        
         export ALLOW_MISSING_DEPENDENCIES=true
         export OF_MAINTAINER=${{ inputs.OF_MAINTAINER }}
-        export FOX_USE_NANO_EDITOR=1
+        export FOX_BUILD_DEVICE=${{ inputs.DEVICE_NAME }}
+        export LC_ALL="C"
+        source build/envsetup.sh
+        
         set -e
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
+    
     - name: 📊 显示ccache统计信息
       run: |
         ccache -sv
+    
     - name: 🏷️ 设置发布属性
       run: |
         echo "BUILD_DATE=$(TZ=Asia/Manila date +%Y%m%d)" >> $GITHUB_ENV
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+    
     - name: 📦 处理输出文件
       run: |
         OUT_DIR=${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/target/product/${{ inputs.DEVICE_NAME }}
@@ -143,6 +148,7 @@ jobs:
         done
       env:
         BUILD_DATE: ${{ env.BUILD_DATE }}
+    
     - name: 🚀 上传至 Release
       uses: softprops/action-gh-release@v2
       with:
