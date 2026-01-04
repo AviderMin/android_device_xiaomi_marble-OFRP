@@ -1,5 +1,10 @@
 name: 🦊 OrangeFox for marble - 构建
 
+# Credits to:
+# https://github.com/TeamWin
+# https://gitlab.com/OrangeFox
+# And all Contributors in every repositories I used
+
 on:
   workflow_dispatch:
     inputs:
