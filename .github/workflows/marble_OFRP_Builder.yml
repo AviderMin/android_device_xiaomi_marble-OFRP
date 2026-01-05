@@ -89,7 +89,7 @@ jobs:
       - name: ⚡ 初始化 ccache
         run: |
           ccache --zero-stats || true
-          ccache -M 50G
+          ccache -M 20G
           ccache -o compression=true
           ccache -o compiler_check=content
           ccache -s
@@ -133,7 +133,7 @@ jobs:
           source build/envsetup.sh
 
           set -e
-          lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
+          lunch twrp_${{ inputs.DEVICE_NAME }}-eng && mka adbd ${{ inputs.BUILD_TARGET }}image
 
       - name: 📊 显示 ccache 统计
         run: |
