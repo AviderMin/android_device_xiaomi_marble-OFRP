@@ -101,18 +101,17 @@ jobs:
       - name: 🔨 编译 OrangeFox Recovery
         run: |
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}
-
+          set +e
           export FOX_BUILD_DEVICE=${DEVICE_NAME}
           export ALLOW_MISSING_DEPENDENCIES=true
 
           if [[ "${USE_CCACHE}" == "true" ]]; then
             export USE_CCACHE=1
             export CCACHE_EXEC=/usr/bin/ccache
-            sed -i 's/return sandboxConfig\.working/return false/g' \
-              build/soong/ui/build/sandbox_linux.go
           fi
 
           source build/envsetup.sh
+          set -e
 
           if [[ "${MANIFEST_BRANCH}" == "14.1" ]]; then
             lunch twrp_${DEVICE_NAME}-ap2a-eng
