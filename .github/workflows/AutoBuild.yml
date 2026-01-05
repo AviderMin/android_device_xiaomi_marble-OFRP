@@ -57,7 +57,7 @@ jobs:
       - name: 📥 拉取仓库内容
         uses: actions/checkout@main
 
-      - name: ⚙️ Setup ccache
+      - name: ⚙️ 配置 ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           max-size: "2G"
