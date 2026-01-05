@@ -62,10 +62,10 @@ jobs:
 
     steps:
 
-      - name: 🧹 清理空间
+      - name: 🧹 清理构建空间
         uses: rokibhasansagar/slimhub_actions@main
 
-      - name: 🛠️ 构建环境
+      - name: 🧰 安装构建依赖环境
         run: |
           sudo apt install aria2 linux-modules-extra-$(uname -r) zram-tools -y
           git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
@@ -77,22 +77,22 @@ jobs:
           sudo apt autoremove -qy 2>/dev/null || true
           sudo rm -rf /var/cache/apt/archives/ 2>/dev/null || true
         
-      - name: 🛠️ 最大化构建空间
+      - name: 💾 最大化磁盘可用空间
         uses: easimon/maximize-build-space@master
         with:
           root-reserve-mb: '3072'
 
-      - name: 🛠️ 检查
+      - name: 🔍 拉取仓库内容
         uses: actions/checkout@main
 
-      - name: 🛠️ 配置 ccache
+      - name: ⚙️ 配置 ccache 编译缓存
         uses: hendrikmuhs/ccache-action@v1.2
         if: inputs.USE_CCACHE
         with:
           max-size: "2G"
           create-symlink: true
 
-      - name: 🛠️ 设置 ZRAM
+      - name: ⚡ 启用并配置 ZRAM
         run: |
           sudo modprobe zram
           sudo sed -i 's/^#PERCENT=50/PERCENT=90/' /etc/default/zramswap
@@ -100,7 +100,7 @@ jobs:
           sudo systemctl restart zramswap
           zramctl
 
-      - name: 📜 建立清单
+      - name: 📜 同步 OrangeFox 源码清单
         if: inputs.MANIFEST_BRANCH == '12.1' || inputs.MANIFEST_BRANCH == '14.1'
         run: |
           mkdir -p ${GITHUB_WORKSPACE}/OrangeFox
@@ -111,7 +111,7 @@ jobs:
           cd sync
           ./orangefox_sync.sh --branch ${{ inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
 
-      - name: 🛠️ 为 fox_14.1 分支添加 WLAN 支持
+      - name: 📡 修复 fox_14.1 WLAN 支持
         if: inputs.MANIFEST_BRANCH == '14.1'
         run: |
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
@@ -121,20 +121,20 @@ jobs:
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
           git fetch https://github.com/ymdzq/OrangeFox_Recovery fox_14.1 && git cherry-pick 4aaf601 99e35fe 1ccd5e3
 
-      - name: 📥 克隆设备树
+      - name: 📥 克隆设备树源码
         run: |
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
           git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ./${{ inputs.DEVICE_PATH }}
           cd ${{ inputs.DEVICE_PATH }}
           echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-      - name: 🛠️ 替换 addons 文件
+      - name: 🧩 注入 OrangeFox Addons
         run: |
           git clone https://github.com/AviderMin/OrangeFox_Addons.git ${GITHUB_WORKSPACE}/addons
           cp ${GITHUB_WORKSPACE}/addons/* \
              ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/vendor/recovery/Files/ || true
 
-      - name: 🔨 构建 OrangeFox
+      - name: 🔨 编译 OrangeFox Recovery
         run: |
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
           set +e
@@ -153,11 +153,11 @@ jobs:
           lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
           fi
 
-      - name: 📊 显示 ccache 统计
+      - name: 📊 查看 ccache 命中统计
         run: |
           ccache -sv
 
-      - name: 🏷️ 设置发布属性
+      - name: 🏷️ 生成发布元信息
         run: |
           echo "BUILD_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)" >> $GITHUB_ENV
           cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
@@ -168,8 +168,7 @@ jobs:
           fi
           echo "DEVICE_TREE_URL=${DEVICE_TREE_URL}" >> $GITHUB_ENV
 
-
-      - name: 📦 处理输出文件
+      - name: 📦 规范化输出文件名
         run: |
           OUT_DIR=${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/target/product/${{ inputs.DEVICE_NAME }}
 
@@ -181,7 +180,7 @@ jobs:
             mv "$f" "$OUT_DIR/${name}-${BUILD_DATE}.${ext}"
           done
 
-      - name: 🚀 上传至 Release
+      - name: 🚀 发布至 GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.run_id }}
@@ -198,3 +197,4 @@ jobs:
             Device Tree Branch: ${{ inputs.DEVICE_TREE_BRANCH }}
             Commit: ${{ env.COMMIT_ID }}
             Maintainer: ${{ inputs.OF_MAINTAINER }}
+            Build Date: ${{ env.BUILD_DATE }}
