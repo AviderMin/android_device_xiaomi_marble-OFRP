@@ -134,7 +134,7 @@ jobs:
 
           mapfile -t FILES < <(
             find "${GITHUB_WORKSPACE}/OrangeFox" \ 
-              -type f \( -name 'OrangeFox-*.img' -o -name 'OrangeFox-*.zip' \)
+              -type f \( -name 'OrangeFox*.img' -o -name 'OrangeFox*.zip' \)
           )
 
           if [[ ${#FILES[@]} -eq 0 ]]; then
