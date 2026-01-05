@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    name: 🏗️ Build OrangeFox for marble
+    name: 🏗️ 构建 OrangeFox for marble
     runs-on: ubuntu-latest
     permissions:
       contents: write
