@@ -124,31 +124,26 @@ jobs:
         run: |
           ccache -sv
 
-      - name: 🏷️ 生成发布元信息
-        run: |
-          echo "BUILD_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)" >> $GITHUB_ENV
-
       - name: 📦 规范化输出文件名
         run: |
-          BASE_OUT=${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}/out/target/product/${DEVICE_NAME}
+          echo "Searching OrangeFox artifacts..."
 
-          echo "Searching OrangeFox output directory under: $BASE_OUT"
+          mapfile -t FILES < <(
+            find "${GITHUB_WORKSPACE}/OrangeFox" \ 
+              -type f \( -name 'OrangeFox-*.img' -o -name 'OrangeFox-*.zip' \)
+          )
 
-          OUT_DIR=$(find "$BASE_OUT" -maxdepth 2 -type d -name "$DEVICE_NAME" | head -n 1)
-
-          if [[ -z "$OUT_DIR" ]]; then
-            echo "ERROR: Cannot find output directory for device ${DEVICE_NAME}"
+          if [[ ${#FILES[@]} -eq 0 ]]; then
+            echo "ERROR: No OrangeFox artifacts found"
             exit 1
           fi
 
-          echo "Using OUT_DIR=$OUT_DIR"
-
-          for f in "$OUT_DIR"/OrangeFox*.img "$OUT_DIR"/OrangeFox*.zip; do
-            [ -e "$f" ] || continue
+          for f in "${FILES[@]}"; do
+            dir=$(dirname "$f")
             base=$(basename "$f")
             ext="${base##*.}"
             name="${base%.*}"
-            mv "$f" "$OUT_DIR/${name}-${BUILD_DATE}.${ext}"
+            mv "$f" "$dir/${name}-${BUILD_DATE}.${ext}"
           done
 
       - name: 🚀 发布至 GitHub Releases
