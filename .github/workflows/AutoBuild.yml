@@ -124,6 +124,10 @@ jobs:
         run: |
           ccache -sv
 
+      - name: 🏷️ 生成发布元信息
+        run: |
+          echo "BUILD_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)" >> $GITHUB_ENV
+
       - name: 📦 规范化输出文件名
         run: |
           echo "Searching OrangeFox artifacts..."
