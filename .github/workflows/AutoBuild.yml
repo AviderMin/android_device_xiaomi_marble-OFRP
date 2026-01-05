@@ -1,4 +1,4 @@
-name: 🦊 OrangeFox for marble - 月度构建
+name: 🦊 OrangeFox for marble - 月度自动构建
 
 # Credits to:
 # https://github.com/TeamWin
@@ -9,6 +9,7 @@ on:
   schedule:
     # UTC 16:00 = 北京时间 每月 1 日 00:00
     - cron: '0 16 1 * *'
+  workflow_dispatch:
 
 jobs:
   build:
