@@ -107,6 +107,7 @@ jobs:
           if [[ "${USE_CCACHE}" == "true" ]]; then
             export USE_CCACHE=1
             export CCACHE_EXEC=/usr/bin/ccache
+            sed -i 's/return sandboxConfig\.working/return false/g' build/soong/ui/build/sandbox_linux.go
           fi
           source build/envsetup.sh
           set -e
