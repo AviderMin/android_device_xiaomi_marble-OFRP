@@ -38,7 +38,6 @@ jobs:
 
       - name: 🧰 安装构建依赖环境
         run: |
-          sudo apt update
           sudo apt install -y aria2 linux-modules-extra-$(uname -r) zram-tools
           git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
           cd scripts
