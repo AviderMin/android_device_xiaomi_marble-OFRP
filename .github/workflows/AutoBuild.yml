@@ -1,0 +1,173 @@
+name: 🦊 OrangeFox for marble - 月度构建
+
+# Credits to:
+# https://github.com/TeamWin
+# https://gitlab.com/OrangeFox
+# And all Contributors in every repositories I used
+
+on:
+  schedule:
+    # UTC 16:00 = 北京时间 每月 1 日 00:00
+    - cron: '0 16 1 * *'
+
+jobs:
+  build:
+    name: 🏗️ Build OrangeFox for marble
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ===== 构建参数 =====
+      MANIFEST_BRANCH: 12.1
+      DEVICE_TREE: https://github.com/AviderMin/ofrp_device_xiaomi_marble
+      DEVICE_TREE_BRANCH: fox_12.1
+      DEVICE_PATH: device/xiaomi/marble
+      DEVICE_NAME: marble
+      BUILD_TARGET: recovery
+      USE_CCACHE: true
+      OF_MAINTAINER: AviderMin
+
+    steps:
+
+      - name: 🧹 清理构建空间
+        uses: rokibhasansagar/slimhub_actions@main
+
+      - name: 🧰 安装构建依赖环境
+        run: |
+          sudo apt update
+          sudo apt install -y aria2 linux-modules-extra-$(uname -r) zram-tools
+          git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
+          cd scripts
+          sudo bash setup/android_build_env.sh
+          cd ..
+          rm -rf scripts
+          sudo apt autoclean || true
+          sudo apt autoremove -qy || true
+          sudo rm -rf /var/cache/apt/archives/* || true
+
+      - name: 💾 最大化磁盘可用空间
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: '3072'
+
+      - name: 📥 拉取仓库内容
+        uses: actions/checkout@main
+
+      - name: ⚙️ Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          max-size: "2G"
+          create-symlink: true
+
+      - name: ⚡ 启用并配置 ZRAM
+        run: |
+          sudo modprobe zram
+          sudo sed -i 's/^#PERCENT=50/PERCENT=90/' /etc/default/zramswap
+          sudo sed -i 's/^#PRIORITY=100/PRIORITY=1000/' /etc/default/zramswap
+          sudo systemctl restart zramswap
+          zramctl
+
+      - name: 📜 同步 OrangeFox 源码清单
+        run: |
+          mkdir -p ${GITHUB_WORKSPACE}/OrangeFox
+          cd ${GITHUB_WORKSPACE}/OrangeFox
+
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+          git clone https://gitlab.com/OrangeFox/sync.git -b master
+          cd sync
+          ./orangefox_sync.sh \
+            --branch ${MANIFEST_BRANCH} \
+            --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}
+
+      - name: 📥 克隆设备树源码
+        run: |
+          cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}
+          git clone ${DEVICE_TREE} -b ${DEVICE_TREE_BRANCH} ${DEVICE_PATH}
+          cd ${DEVICE_PATH}
+          echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: 🧩 注入 OrangeFox Addons
+        run: |
+          git clone https://github.com/AviderMin/OrangeFox_Addons.git ${GITHUB_WORKSPACE}/addons
+          cp ${GITHUB_WORKSPACE}/addons/* \
+             ${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}/vendor/recovery/Files/ || true
+
+      - name: 🔨 编译 OrangeFox Recovery
+        run: |
+          cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}
+
+          export FOX_BUILD_DEVICE=${DEVICE_NAME}
+          export ALLOW_MISSING_DEPENDENCIES=true
+
+          if [[ "${USE_CCACHE}" == "true" ]]; then
+            export USE_CCACHE=1
+            export CCACHE_EXEC=/usr/bin/ccache
+            sed -i 's/return sandboxConfig\.working/return false/g' \
+              build/soong/ui/build/sandbox_linux.go
+          fi
+
+          source build/envsetup.sh
+
+          if [[ "${MANIFEST_BRANCH}" == "14.1" ]]; then
+            lunch twrp_${DEVICE_NAME}-ap2a-eng
+          else
+            lunch twrp_${DEVICE_NAME}-eng
+          fi
+
+          make clean
+          mka adbd ${BUILD_TARGET}image
+
+      - name: 📊 查看 ccache 命中统计
+        run: |
+          ccache -sv
+
+      - name: 🏷️ 生成发布元信息
+        run: |
+          echo "BUILD_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: 📦 规范化输出文件名
+        run: |
+          BASE_OUT=${GITHUB_WORKSPACE}/OrangeFox/fox_${MANIFEST_BRANCH}/out/target/product/${DEVICE_NAME}
+
+          echo "Searching OrangeFox output directory under: $BASE_OUT"
+
+          OUT_DIR=$(find "$BASE_OUT" -maxdepth 2 -type d -name "$DEVICE_NAME" | head -n 1)
+
+          if [[ -z "$OUT_DIR" ]]; then
+            echo "ERROR: Cannot find output directory for device ${DEVICE_NAME}"
+            exit 1
+          fi
+
+          echo "Using OUT_DIR=$OUT_DIR"
+
+          for f in "$OUT_DIR"/OrangeFox*.img "$OUT_DIR"/OrangeFox*.zip; do
+            [ -e "$f" ] || continue
+            base=$(basename "$f")
+            ext="${base##*.}"
+            name="${base%.*}"
+            mv "$f" "$OUT_DIR/${name}-${BUILD_DATE}.${ext}"
+          done
+
+      - name: 🚀 发布至 GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: monthly-${{ env.BUILD_DATE }}
+          name: OrangeFox Recovery for munch // ${{ env.BUILD_DATE }}
+          files: |
+            OrangeFox/fox_${{ env.MANIFEST_BRANCH }}/out/target/product/${{ env.DEVICE_NAME }}/**/OrangeFox*.img
+            OrangeFox/fox_${{ env.MANIFEST_BRANCH }}/out/target/product/${{ env.DEVICE_NAME }}/**/OrangeFox*.zip
+          body: |
+            ## OrangeFox Recovery Build (Automated)
+
+            - Branch: fox_${{ env.MANIFEST_BRANCH }}
+            - Device: munch
+            - Target: ${{ env.BUILD_TARGET }}
+            - Device Tree: ${{ env.DEVICE_TREE }}
+            - Commit: ${{ env.COMMIT_ID }}
+            - Maintainer: ${{ env.OF_MAINTAINER }}
+            - Build Date: ${{ env.BUILD_DATE }}
