@@ -1,4 +1,4 @@
-name: 🦊 OrangeFox for marble - 月度自动构建
+name: 🦊 OrangeFox Recovery - 月度自动构建
 
 # Credits to:
 # https://github.com/TeamWin
@@ -13,7 +13,7 @@ on:
 
 jobs:
   build:
-    name: 🏗️ 构建 OrangeFox for marble
+    name: 🏗️ 构建 OrangeFox Recovery
     runs-on: ubuntu-latest
     permissions:
       contents: write
