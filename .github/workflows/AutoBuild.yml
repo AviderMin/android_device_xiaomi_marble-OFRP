@@ -133,7 +133,7 @@ jobs:
           echo "Searching OrangeFox artifacts..."
 
           mapfile -t FILES < <(
-            find "${GITHUB_WORKSPACE}/OrangeFox" \ 
+            find "${GITHUB_WORKSPACE}/OrangeFox" \
               -type f \( -name 'OrangeFox*.img' -o -name 'OrangeFox*.zip' \)
           )
 
