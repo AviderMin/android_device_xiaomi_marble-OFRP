@@ -154,7 +154,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: monthly-${{ env.BUILD_DATE }}
-          name: OrangeFox Recovery for munch // ${{ env.BUILD_DATE }}
+          name: OrangeFox Recovery for ${{ env.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
           files: |
             OrangeFox/fox_${{ env.MANIFEST_BRANCH }}/out/target/product/${{ env.DEVICE_NAME }}/**/OrangeFox*.img
             OrangeFox/fox_${{ env.MANIFEST_BRANCH }}/out/target/product/${{ env.DEVICE_NAME }}/**/OrangeFox*.zip
@@ -162,7 +162,7 @@ jobs:
             ## OrangeFox Recovery Build (Automated)
 
             - Branch: fox_${{ env.MANIFEST_BRANCH }}
-            - Device: munch
+            - Device: ${{ env.DEVICE_NAME }}
             - Target: ${{ env.BUILD_TARGET }}
             - Device Tree: ${{ env.DEVICE_TREE }}
             - Commit: ${{ env.COMMIT_ID }}
