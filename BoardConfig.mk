@@ -162,6 +162,7 @@ TW_LOAD_VENDOR_MODULES := "adsp_loader_dlkm.ko goodix_core.ko"
 TW_LOAD_VENDOR_MODULES_EXCLUDE_GKI := true
 TW_NO_SCREEN_BLANK := true
 #TW_ALLOW_REWRITE_SUPER_METADATA := true
+TW_INCLUDE_REPACKTOOLS := true
 
 # TWRP Debug Flags
 #TWRP_EVENT_LOGGING := true
