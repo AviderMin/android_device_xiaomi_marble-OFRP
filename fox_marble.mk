@@ -56,7 +56,6 @@ OF_NO_TREBLE_COMPATIBILITY_CHECK := 1
 
 # OrangeFox Localization Settings
 OF_MAINTAINER=AviderMin
-OF_DEFAULT_TIMEZONE := CST-8
 
 # Dynamic Partition Assist Options
 FOX_USE_DMSETUP := 1
